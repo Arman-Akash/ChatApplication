@@ -1,0 +1,35 @@
+22/04/2025 4:07:32 pm
+:0
+Message: String reference not set to an instance of a String. (Parameter 's')
+Inner Exception: 
+
+22/04/2025 4:13:05 pm
+:0
+Message: String reference not set to an instance of a String. (Parameter 's')
+Inner Exception: 
+
+22/04/2025 4:13:22 pm
+:0
+Message: String reference not set to an instance of a String. (Parameter 's')
+Inner Exception: 
+
+22/04/2025 4:15:57 pm
+:0
+Message: String reference not set to an instance of a String. (Parameter 's')
+Inner Exception: 
+
+22/04/2025 4:33:43 pm
+:0
+Message: IDX10720: Unable to create KeyedHashAlgorithm for algorithm 'HS256', the key size must be greater than: '256' bits, key has '136' bits. See https://aka.ms/IdentityModel/UnsafeRelaxHmacKeySizeValidation (Parameter 'keyBytes')
+Inner Exception: 
+
+22/04/2025 4:36:15 pm
+:0
+Message: IDX10720: Unable to create KeyedHashAlgorithm for algorithm 'HS256', the key size must be greater than: '256' bits, key has '136' bits. See https://aka.ms/IdentityModel/UnsafeRelaxHmacKeySizeValidation (Parameter 'keyBytes')
+Inner Exception: 
+
+22/04/2025 4:37:31 pm
+:0
+Message: IDX10720: Unable to create KeyedHashAlgorithm for algorithm 'HS256', the key size must be greater than: '256' bits, key has '224' bits. See https://aka.ms/IdentityModel/UnsafeRelaxHmacKeySizeValidation (Parameter 'keyBytes')
+Inner Exception: 
+

@@ -1,274 +1,363 @@
 import React, { useState, useEffect, useRef } from "react";
-import './Chat.css'
+import { HubConnectionBuilder } from "@microsoft/signalr";
+import { v4 as uuidv4 } from "uuid";
+import { apiUrl } from "./config";
+import "./Chat.css";
+import * as keys from "./Axios/keys";
+import * as storage from "./Axios/storage";
+import * as axios from "./Axios/Axios";
+import { useParams } from "react-router-dom";
 
 const Chat = () => {
-    // const msgEnd = useRef(null);
-    // const scrollToBottom = () => {
-    //     msgEnd.current?.scrollIntoView({ behavior: "smooth" });
-    // }
+    var user = storage.loadState(keys.LOGGED_IN_USER);
+    console.log(user);
 
-    // useEffect(() => {
-    //     // scrollToBottom()
-    // }, [])
+    const { id } = useParams();
+    const [connection, setConnection] = useState(null);
+    const [chat, setChat] = useState([]);
+    const latestChat = useRef(null);
+    const [chatUsers, setChatUsers] = useState([]);
+    const [showTextBox, setShowTextBox] = useState(false);
+    latestChat.current = chat;
+    const [message, setMessage] = useState("");
+    const [selectedUser, setSeletedUser] = useState(null);
+    const [count, setCount] = useState(1);
 
-    //source: https://bootsnipp.com/snippets/nNg98
+    const msgEnd = useRef(null);
+    const scrollToBottom = () => {
+        msgEnd.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const onMessageUpdate = (e) => {
+        setMessage(e.target.value);
+    };
+
+    useEffect(() => {
+        const newConnection = new HubConnectionBuilder()
+            .withUrl(apiUrl + "/hubs/chat")
+            .withAutomaticReconnect()
+            .build();
+
+        setConnection(newConnection);
+
+    }, []);
+
+    useEffect(() => {
+        // console.log(id, chatUsers)
+        if (id != undefined) {
+            setSeletedUser(chatUsers.find((e) => e.id == id));
+        }
+    }, [id, chatUsers]);
+
+    useEffect(() => {
+        //get users
+        axios.get(`api/chat/GetUsers`, undefined, (response) => {
+            setChatUsers(response.data);
+        });
+    }, [setChatUsers]);
+
+    useEffect(() => {
+        if (connection) {
+            connection
+                .start()
+                .then((result) => {
+                    connection
+                        .invoke("JoinGroup", user?.user_id?.toString())
+                        .catch((err) => {
+                            console.log(err);
+                        });
+
+                    connection.on("ReceiveMessage", (message) => {
+                        console.log(message);
+                        // message.time = new Date().getHours() + ":" + new Date().getMinutes() 
+                        const updatedChat = [...latestChat.current];
+                        updatedChat.push(message);
+                        setChat(updatedChat);
+                    });
+                })
+                .catch((e) => console.log("Connection failed: ", e));
+        }
+    }, [connection]);
+
+    const sendMessage = async (message) => {
+        if (message != "") {
+            const chatMessage = {
+                user: user.user_id,
+                message: message,
+                receiver: selectedUser?.id,
+            };
+            const updatedChat = [...latestChat.current];
+            updatedChat.push(chatMessage);
+            setChat(updatedChat);
+            // console.log(connection._connectionStarted);
+            if (connection._connectionStarted) {
+                try {
+                    // await connection.send("SendMessage", chatMessage);
+                    axios.post(`api/Chat`, chatMessage);
+                    setMessage("");
+                } catch (e) {
+                    console.log(e);
+                }
+            } else {
+                // alert('No connection to server yet.');
+                console.log("No connection to server yet.");
+            }
+        }
+    };
+
+    var selectUser = (user) => {
+        setShowTextBox(true);
+        setSeletedUser(user);
+    };
+
+    const getMessage = () => {
+        axios.get(
+            `api/chat/GetMessages/${selectedUser?.id}/${count}`,
+            undefined,
+            (response) => {
+                // console.log(response.data);
+                var c = response.data.map((e) => ({
+                    user: e.senderId,
+                    receiver: e.receiverId,
+                    message: e.content,
+                    time: e.time
+                }));
+                setChat([...c, ...chat]);
+                // const { scrollTop } = msgBoxRef.current;
+                // scrollTop = 10;
+                if (c.length > 0) {
+                    setCount((e) => e + 1);
+                }
+            }
+        );
+    };
+
+    useEffect(() => {
+        if (selectedUser && selectedUser.id != undefined) {
+            axios.get(
+                `api/chat/GetMessages/${selectedUser?.id}/${1}`,
+                undefined,
+                (response) => {
+                    // console.log(response.data);
+                    var c = response.data.map((e) => ({
+                        user: e.senderId,
+                        receiver: e.receiverId,
+                        message: e.content,
+                        time: e.time
+                    }));
+                    setChat([...c]);
+                    setCount(2);
+                }
+            );
+        }
+    }, [selectedUser]);
+
+    useEffect(() => {
+        if(count == 2) {
+            scrollToBottom();
+        }
+    }, [chat])
+    
+    const msgBoxRef = useRef();
+
+    const onScroll = () => {
+        if (msgBoxRef.current) {
+            const { scrollTop } = msgBoxRef.current;
+            console.log(scrollTop);
+            if (scrollTop == 0) {
+                getMessage();
+                msgBoxRef.current.scrollTop = 100;
+            }
+        }
+    };
 
     return (
-        <div className="container-fluid vh-100">
-            <div className="row vh-100" >
-                <div className="col-md-4 col-xl-3 chat pl-0 pr-0">
+        <div className="container-fluid vh-100 p-0">
+            <div className="row vh-100">
+                <div
+                    className="col-md-4 col-xl-3 chat pl-0 pr-0"
+                    style={{ paddingRight: "5px" }}
+                >
                     <div className="card mb-sm-3 mb-md-0 contacts_card br-0">
                         <div className="card-header">
                             <div className="input-group">
-                                <input type="text" placeholder="Search..." name="" className="form-control search" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    name=""
+                                    className="form-control search"
+                                />
                                 <div className="input-group-prepend">
-                                    <span className="input-group-text search_btn"><i className="fas fa-search"></i></span>
+                                    <span
+                                        className="input-group-text search_btn"
+                                        style={{ height: "100%" }}
+                                    >
+                                        <i className="fas fa-search"></i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
                         <div className="card-body contacts_body">
-                            <ui className="contacts">
-                                <li className="active">
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
+                            <ul className="contacts">
+                                {chatUsers?.map((e) => (
+                                    <li
+                                        className={
+                                            `clearfix` + selectedUser?.id ==
+                                            e.id
+                                                ? " active"
+                                                : ""
+                                        }
+                                        key={uuidv4()}
+                                        // className="clearfix"
+                                        onClick={() => selectUser(e)}
+                                    >
+                                        <div className="d-flex bd-highlight">
+                                            <div className="img_cont">
+                                                <img
+                                                    src={`${apiUrl}/${e.photo}`}
+                                                    alt="avatar"
+                                                    className="rounded-circle user_img"
+                                                />
+                                                {/* <span className="online_icon"></span> */}
+                                            </div>
+                                            <div className="user_info">
+                                                <span>{e.name}</span>
+                                                {/* <p>Kalid is online</p> */}
+                                            </div>
                                         </div>
-                                        <div className="user_info">
-                                            <span>Khalid</span>
-                                            <p>Kalid is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://2.bp.blogspot.com/-8ytYF7cfPkQ/WkPe1-rtrcI/AAAAAAAAGqU/FGfTDVgkcIwmOTtjLka51vineFBExJuSACLcBGAs/s320/31.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon offline"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Taherah Big</span>
-                                            <p>Taherah left 7 mins ago</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://i.pinimg.com/originals/ac/b9/90/acb990190ca1ddbb9b20db303375bb58.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Sami Rafi</span>
-                                            <p>Sami is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://i.pinimg.com/originals/ac/b9/90/acb990190ca1ddbb9b20db303375bb58.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Sami Rafi</span>
-                                            <p>Sami is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://i.pinimg.com/originals/ac/b9/90/acb990190ca1ddbb9b20db303375bb58.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Sami Rafi</span>
-                                            <p>Sami is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://i.pinimg.com/originals/ac/b9/90/acb990190ca1ddbb9b20db303375bb58.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Sami Rafi</span>
-                                            <p>Sami is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://i.pinimg.com/originals/ac/b9/90/acb990190ca1ddbb9b20db303375bb58.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Sami Rafi</span>
-                                            <p>Sami is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://i.pinimg.com/originals/ac/b9/90/acb990190ca1ddbb9b20db303375bb58.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Sami Rafi</span>
-                                            <p>Sami is online</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="http://profilepicturesdp.com/wp-content/uploads/2018/07/sweet-girl-profile-pictures-9.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon offline"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Nargis Hawa</span>
-                                            <p>Nargis left 30 mins ago</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="d-flex bd-highlight">
-                                        <div className="img_cont">
-                                            <img src="https://static.turbosquid.com/Preview/001214/650/2V/boy-cartoon-3D-model_D.jpg" className="rounded-circle user_img" />
-                                            <span className="online_icon offline"></span>
-                                        </div>
-                                        <div className="user_info">
-                                            <span>Rashid Samim</span>
-                                            <p>Rashid left 50 mins ago</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ui>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                         <div className="card-footer"></div>
-                    </div></div>
-                <div className="col-md-8 col-xl-9 chat pl-0 pr-0">
+                    </div>
+                </div>
+                <div
+                    className="col-md-8 col-xl-9 chat pl-0 pr-0"
+                    style={{ paddingLeft: "0", paddingRight: "0" }}
+                >
                     <div className="card br-0">
                         <div className="card-header msg_head">
                             <div className="d-flex bd-highlight">
-                                <div className="img_cont">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img" />
-                                    <span className="online_icon"></span>
-                                </div>
-                                <div className="user_info">
-                                    <span>Khalid</span>
-                                    {/* <p className="mb-0">1767 Messages</p> */}
-                                </div>
-                                {/* <div className="video_cam">
-                                    <span><i className="fas fa-video"></i></span>
-                                    <span><i className="fas fa-phone"></i></span>
+                                {selectedUser && (
+                                    <>
+                                        <div className="img_cont">
+                                            <img
+                                                src={`${apiUrl}/${selectedUser?.photo}`}
+                                                className="rounded-circle user_img"
+                                            />
+                                            {/* <span className="online_icon"></span> */}
+                                        </div>
+                                        <div className="user_info">
+                                            <span>{selectedUser?.name}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        <div
+                            className="card-body msg_card_body"
+                            id="msg_card_body"
+                            ref={msgBoxRef}
+                            onScroll={onScroll}
+                        >
+                            {chat &&
+                                chat.map((item) => {
+                                    return user.user_id == item.user ? (
+                                        //own message
+                                        <div
+                                            className="d-flex justify-content-end mb-4"
+                                            key={uuidv4()}
+                                        >
+                                            <div className="msg_cotainer_send">
+                                                {item.message}
+                                                <span className="msg_time_send">
+                                                    {item.time}
+                                                </span>
+                                            </div>
+                                            <div className="img_cont_msg">
+                                                <img
+                                                    src={`${apiUrl}/${user?.photo}`}
+                                                    className="rounded-circle user_img_msg"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : user.user_id == item.receiver &&
+                                      item.user == selectedUser?.id ? (
+                                        <div
+                                            className="d-flex justify-content-start mb-4"
+                                            key={uuidv4()}
+                                        >
+                                            <div className="img_cont_msg">
+                                                <img
+                                                    src={`${apiUrl}/${selectedUser?.photo}`}
+                                                    className="rounded-circle user_img_msg"
+                                                />
+                                            </div>
+                                            <div className="msg_cotainer">
+                                                {item.message}
+                                                <span className="msg_time">
+                                                    {item.time}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : null;
+                                })}
+                            <div ref={msgEnd}></div>
+                        </div>
+                        <div
+                            className="card-footer"
+                            style={{
+                                display: showTextBox ? "block" : "none",
+                            }}
+                        >
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    sendMessage(message);
+                                }}
+                            >
+                                <div className="input-group">
+                                    {/* <div className="input-group-append">
+                                    <span className="input-group-text attach_btn">
+                                        <i className="fas fa-paperclip"></i>
+                                    </span>
                                 </div> */}
-                            </div>
-                            {/* <span id="action_menu_btn"><i className="fas fa-ellipsis-v"></i></span>
-                            <div className="action_menu">
-                                <ul>
-                                    <li><i className="fas fa-user-circle"></i> View profile</li>
-                                    <li><i className="fas fa-users"></i> Add to close friends</li>
-                                    <li><i className="fas fa-plus"></i> Add to group</li>
-                                    <li><i className="fas fa-ban"></i> Block</li>
-                                </ul>
-                            </div> */}
-                        </div>
-                        <div className="card-body msg_card_body">
-                            <div className="d-flex justify-content-start mb-4">
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
+
+                                    <textarea
+                                        className="form-control type_msg"
+                                        placeholder="Type your message..."
+                                        onKeyUp={(e) => {
+                                            if (e.key == "Enter") {
+                                                if (!e.shiftKey) {
+                                                    sendMessage(message);
+                                                }
+                                            }
+                                        }}
+                                        onChange={(e) => {
+                                            onMessageUpdate(e);
+                                        }}
+                                        value={message}
+                                    ></textarea>
+                                    <div className="input-group-append">
+                                        <span
+                                            className="input-group-text send_btn"
+                                            style={{ height: "100%" }}
+                                            onClick={(e) => {
+                                                sendMessage(message);
+                                            }}
+                                        >
+                                            <i className="fas fa-location-arrow"></i>
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="msg_cotainer">
-                                    Hi, how are you samim?
-                                    <span className="msg_time">8:40 AM, Today</span>
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-end mb-4">
-                                <div className="msg_cotainer_send">
-                                    Hi Khalid i am good tnx how about you?
-                                    <span className="msg_time_send">8:55 AM, Today</span>
-                                </div>
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-start mb-4">
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                                <div className="msg_cotainer">
-                                    I am good too, thank you for your chat template
-                                    <span className="msg_time">9:00 AM, Today</span>
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-end mb-4">
-                                <div className="msg_cotainer_send">
-                                    You are welcome
-                                    <span className="msg_time_send">9:05 AM, Today</span>
-                                </div>
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-start mb-4">
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                                <div className="msg_cotainer">
-                                    I am looking for your next templates
-                                    <span className="msg_time">9:07 AM, Today</span>
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-end mb-4">
-                                <div className="msg_cotainer_send">
-                                    Ok, thank you have a good day
-                                    <span className="msg_time_send">9:10 AM, Today</span>
-                                </div>
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-start mb-4">
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                                <div className="msg_cotainer">
-                                    Bye, see you
-                                    <span className="msg_time">9:12 AM, Today</span>
-                                </div>
-                            </div>
-                            <div className="d-flex justify-content-end mb-4">
-                                <div className="msg_cotainer_send">
-                                    Ok
-                                    <span className="msg_time_send">9:10 AM, Today</span>
-                                </div>
-                                <div className="img_cont_msg">
-                                    <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" className="rounded-circle user_img_msg" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="card-footer">
-                            <div className="input-group">
-                                <div className="input-group-append">
-                                    <span className="input-group-text attach_btn"><i className="fas fa-paperclip"></i></span>
-                                </div>
-                                <textarea name="" className="form-control type_msg" placeholder="Type your message..."></textarea>
-                                <div className="input-group-append">
-                                    <span className="input-group-text send_btn"><i className="fas fa-location-arrow"></i></span>
-                                </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default Chat;

@@ -1,0 +1,1 @@
+export const LOGGED_IN_USER = 'Slang_LOGGED_IN_USER';
