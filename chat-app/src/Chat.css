@@ -13,9 +13,13 @@ html {
 }
 
 .card {
-    height: 100vh;
+    /* height: 100vh; */
     border-radius: 15px !important;
     background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.h-100vh {
+    height: 100vh !important;
 }
 
 .contacts_body {

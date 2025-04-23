@@ -14,7 +14,8 @@ const style = {
     label: {
         color: '#555',
         marginBottom: '5px',
-        marginTop: '10px'
+        marginTop: '10px',
+        textAlign: 'left',
     },
     cardTitle: {
         color: '#555',
@@ -40,10 +41,10 @@ const SignIn = () => {
     }
 
     return (
-        <div style={{ width: "60%", margin: "auto", marginTop: '100px' }}>
+        <div style={{ width: "400px", margin: "auto", paddingTop: '100px', height: '460px' }}>
             <div className='card' style={style.card}>
 
-            <h4 className='text-left font-weight-bold'>Sign in!</h4>
+            <h4 className='text-center font-weight-bold'>Sign in!</h4>
             <Formik
                 enableReinitialize
                 initialValues={{
@@ -61,7 +62,6 @@ const SignIn = () => {
                 onSubmit={(values) => {
                     axios.post('api/account/authenticate', values, undefined, (response) => {
                         storage.removeState(keys.LOGGED_IN_USER);
-                        debugger
                         console.log(response)
                         storage.saveState(keys.LOGGED_IN_USER, response);
                         history('/')
@@ -103,7 +103,9 @@ const SignIn = () => {
                                 Forgot Password
                             </Button> */}
                             <br /><br />
-                            <a href="/signup">Not an User? Register</a>
+                            <div className='text-center'>
+                                <a href="/signup">Not an User? Register</a>
+                            </div>
                         </Form>
                     )
                 }

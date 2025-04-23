@@ -5,10 +5,15 @@ import * as axios from './Axios/Axios';
 import { useNavigate } from 'react-router-dom';
 
 const style = {
+    card: {
+        padding: '20px',
+        boxShadow: '#00000033 0px 4px 8px 0px, #00000030 0px 6px 20px 0px'
+    },
     label: {
         color: '#555',
         marginBottom: '5px',
-        marginTop: '10px'
+        marginTop: '10px',
+        textAlign: 'left',
     },
     cardTitle: {
         color: '#555',
@@ -34,7 +39,8 @@ const SignUp = () => {
     }
 
     return (
-        <div style={{ width: "60%", margin: "auto" }}>
+        <div style={{ width: "400px", margin: "auto", paddingTop: '50px' }}>
+            <div className='card' style={style.card}>
             <h5 className='text-left'>SignUp!</h5>
             <Formik
                 enableReinitialize
@@ -77,20 +83,12 @@ const SignUp = () => {
                                 />
                                 <span className='text-danger'>{formProps.errors.name}</span>
                             </div>
-                            
                             <div className='form-group'>
                                 <label  style={style.label}>Email</label>
                                 <input name="username" type="email" required className="form-control"
                                     onChange={(e) => handleChange(e, formProps)}
                                 />
                                 <span className='text-danger'>{formProps.errors.username}</span>
-                            </div>
-                            <div className='form-group'>
-                                <label  style={style.label}>Date of Birth</label>
-                                <input name="dob" type="date" required className="form-control"
-                                    onChange={(e) => handleChange(e, formProps)}
-                                />
-                                <span className='text-danger'>{formProps.errors.dob}</span>
                             </div>
                             <div className='form-group'>
                                 <label  style={style.label}>Photo</label>
@@ -100,20 +98,6 @@ const SignUp = () => {
                                     }}
                                 />
                             </div>
-                            {/* <TextField
-                                name="photo"
-                                label="Photo"
-                                // variant="outlined"
-                                margin="normal"
-                                fullWidth
-                                type="file"
-                                InputLabelProps={{
-                                    shrink: true
-                                }}
-                                onChange={(e) => {
-                                    setAttachment(e.target.files[0]);
-                                }}
-                            /> */}
                             <div className='form-group'>
                                 <label  style={style.label}>Password</label>
                                 <input name="password" type="password" required className="form-control"
@@ -136,20 +120,7 @@ const SignUp = () => {
 
             <p>Already have an Account?</p>
             <a href="/signin">Sign In</a>
-            {/* <Grid
-                container
-                justifyContent="flex-end"
-            >
-                <Grid item>
-                    <Button
-                        variant="contained"
-                        className="br-20"
-                        color="primary"
-                    >
-                        Sign In
-                    </Button>
-                </Grid>
-            </Grid> */}
+            </div>
         </div>
     )
 }
