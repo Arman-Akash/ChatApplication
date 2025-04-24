@@ -36,7 +36,7 @@ html {
 }
 
 .card-header {
-    border-radius: 15px 15px 0 0 !important;
+    border-radius: 0 !important;
     border-bottom: 0 !important;
 }
 
@@ -156,12 +156,12 @@ html {
 .user_info {
     margin-top: auto;
     margin-bottom: auto;
-    margin-left: 15px;
+    margin-left: 35px;
 }
 
 .user_info span {
     font-size: 20px;
-    color: black;
+    color: #333;
 }
 
 .user_info p {
@@ -184,7 +184,7 @@ html {
 .msg_cotainer {
     margin-top: auto;
     margin-bottom: auto;
-    margin-left: 10px;
+    margin-left: 40px;
     border-radius: 25px;
     background-color: #82ccdd;
     padding: 5px 10px;

@@ -9,6 +9,7 @@ import * as axios from "./Axios/Axios";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import FileUpload from "./FileUpload";
+import EmptyAvatar from "./EmptyAvatar";
 
 const Chat = () => {
   var user = storage.loadState(keys.LOGGED_IN_USER);
@@ -164,7 +165,7 @@ const Chat = () => {
   const onScroll = () => {
     if (msgBoxRef.current) {
       const { scrollTop } = msgBoxRef.current;
-      console.log(scrollTop);
+      // console.log(scrollTop);
       if (scrollTop === 0) {
         getMessage();
         msgBoxRef.current.scrollTop = 100;
@@ -234,11 +235,15 @@ const Chat = () => {
                   >
                     <div className="d-flex bd-highlight">
                       <div className="img_cont">
-                        <img
-                          src={`${apiUrl}/${e.photo}`}
-                          alt={e.name[0]}
-                          className="rounded-circle user_img"
-                        />
+                        {e.photo ?? e.photo !== null ? (
+                          <img
+                            src={`${apiUrl}/${e.photo}`}
+                            alt={e.name[0]}
+                            className="rounded-circle user_img"
+                          />
+                        ) : (
+                          <EmptyAvatar name={e.name} />
+                        )}
                         {/* <span className="online_icon"></span> */}
                       </div>
                       <div className="user_info">
@@ -250,7 +255,6 @@ const Chat = () => {
                 ))}
               </ul>
             </div>
-            <div className="card-footer"></div>
           </div>
         </div>
         <div
@@ -264,11 +268,15 @@ const Chat = () => {
                   {selectedUser && (
                     <>
                       <div className="img_cont">
-                        <img
-                          src={`${apiUrl}/${selectedUser?.photo}`}
-                          className="rounded-circle user_img"
-                          alt={selectUser?.name[0]}
-                        />
+                        {selectedUser?.photo ?? selectedUser?.photo !== null ? (
+                          <img
+                            src={`${apiUrl}/${selectedUser?.photo}`}
+                            className="rounded-circle user_img"
+                            alt={selectUser?.name[0]}
+                          />
+                        ) : (
+                          <EmptyAvatar name={selectedUser.name} />
+                        )}
                         {/* <span className="online_icon"></span> */}
                       </div>
                       <div className="user_info">
@@ -305,13 +313,17 @@ const Chat = () => {
                         {item.message}
                         <span className="msg_time_send">{item.time}</span>
                       </div>
-                      <div className="img_cont_msg">
-                        <img
-                          src={`${apiUrl}/${user?.photo}`}
-                          className="rounded-circle user_img_msg"
-                          alt={user?.name[0]}
-                        />
-                      </div>
+                      {/* <div className="img_cont_msg">
+                        {user?.photo ?? user.photo !== null ? (
+                          <img
+                            src={`${apiUrl}/${user?.photo}`}
+                            className="rounded-circle user_img_msg"
+                            alt={user?.name[0]}
+                          />
+                        ) : (
+                          <EmptyAvatar name={user?.name} />
+                        )}
+                      </div> */}
                     </div>
                   ) : user.user_id === item.receiver &&
                     item.user === selectedUser?.id ? (
@@ -320,11 +332,15 @@ const Chat = () => {
                       key={uuidv4()}
                     >
                       <div className="img_cont_msg">
-                        <img
-                          src={`${apiUrl}/${selectedUser?.photo}`}
-                          className="rounded-circle user_img_msg"
-                          alt={user?.name[0]}
-                        />
+                        {selectedUser?.photo ?? selectedUser?.photo !== null ? (
+                          <img
+                            src={`${apiUrl}/${selectedUser?.photo}`}
+                            className="rounded-circle user_img_msg"
+                            alt={user?.name[0]}
+                          />
+                        ) : (
+                          <EmptyAvatar name={selectedUser?.name} />
+                        )}
                       </div>
                       <div className="msg_cotainer">
                         {item.message}
