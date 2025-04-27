@@ -51,7 +51,7 @@ html {
 
 .search {
     border-radius: 15px 0 0 15px !important;
-    background-color: rgba(0, 0, 0, 0.3) !important;
+    background-color: #fff;
     border: 0 !important;
     color: black !important;
 }
@@ -62,7 +62,7 @@ html {
 }
 
 .type_msg {
-    background-color: rgba(0, 0, 0, 0.3) !important;
+    background-color: #fff;
     border: 0 !important;
     color: black !important;
     height: 60px !important;
@@ -76,7 +76,7 @@ html {
 
 .attach_btn {
     border-radius: 15px 0 0 15px !important;
-    background-color: rgba(0, 0, 0, 0.3) !important;
+    background-color: #fff;
     border: 0 !important;
     color: black !important;
     cursor: pointer;
@@ -84,7 +84,7 @@ html {
 
 .send_btn {
     border-radius: 0 15px 15px 0 !important;
-    background-color: rgba(0, 0, 0, 0.3) !important;
+    background-color: #fff;
     border: 0 !important;
     color: black !important;
     cursor: pointer;
@@ -92,7 +92,7 @@ html {
 
 .search_btn {
     border-radius: 0 15px 15px 0 !important;
-    background-color: rgba(0, 0, 0, 0.3) !important;
+    background-color: #fff;
     border: 0 !important;
     color: black !important;
     cursor: pointer;
